@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Photo Capture</title>
+    <style>
+        video {
+            width: 100%;
+            height: auto;
+            border: 2px solid black;
+        }
+        canvas {
+            display: none; /* Hide canvas */
+        }
+    </style>
+</head>
+<body>
+    <h1>Automatic Photo Capture</h1>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureCount = 5;
+        let capturedPhotos = 0;
+
+        // Check for browser compatibility
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then((stream) => {
+                    video.srcObject = stream;
+                    startCapturing();
+                })
+                .catch((error) => {
+                    console.error('Error accessing the camera: ', error);
+                });
+        } else {
+            console.error('getUserMedia is not supported in this browser.');
+        }
+
+        function startCapturing() {
+            const captureInterval = setInterval(() => {
+                if (capturedPhotos < captureCount) {
+                    capturePhoto();
+                } else {
+                    clearInterval(captureInterval);
+                }
+            }, 1000); // Capture every 1 second
+        }
+
+        function capturePhoto() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas to a data URL
+            const dataURL = canvas.toDataURL('image/png');
+            saveImage(dataURL, `photo_${capturedPhotos + 1}.png`);
+
+            capturedPhotos++;
+        }
+
+        function saveImage(dataURL, filename) {
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = filename;
+
+            // Programmatically click the link to trigger the download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
